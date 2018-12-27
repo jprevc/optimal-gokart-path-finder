@@ -1,4 +1,4 @@
-from OptimalPathClasses import Gokart
+from optimal_path_classes import Gokart
 import matplotlib.pyplot as plt
 from scipy import misc
 import numpy as np

@@ -2,62 +2,70 @@ import matplotlib.pyplot as plt
 from scipy import misc
 import numpy as np
 import os
-from tqdm import tqdm
-import pickle
-from OptimalPathClasses import Path, Gokart, GokartDriveAnimation, Track
+from optimal_path_classes import Gokart, Track, GokartDriveAnimation
 
-track_image_arr = misc.imread('brnik_track_snip_3.png')
+# read image on which track is visible
+track_image_arr = misc.imread('brnik_track_snip.png')
 
-pts_filename = 'points_2.npy'
-if not os.path.isfile(pts_filename):
+# load predefined track points from a .npy file, if they are not already defined, open track image
+# for user to define them by clicking on the track borders
+pts_filename = 'points.npy'
+if os.path.isfile(pts_filename):
+    points = np.load(pts_filename)
+else:
+    # here, user is prompted to click border points. When finished, click wheel button on mouse to stop
+    fig = plt.figure()
+    axes = fig.add_subplot(111)
+    axes.imshow(track_image_arr)
     points = np.array(plt.ginput(500, timeout=150))
     np.save(pts_filename, points)
-else:
-    points = np.load(pts_filename)
+    plt.close()
 
+# show image with defined border points
+fig_pts = plt.figure()
+axes_pts = fig_pts .add_subplot(111)
+axes_pts.imshow(track_image_arr)
+axes_pts.plot(points[:,0], points[:,1], 'r+')
+
+# first two clicked points are used as a reference to determine the scale of image (bottom right corner of image)
 unit_pts = points[:2,:]
-pix_per_m = np.linalg.norm(unit_pts[0,:] - unit_pts[1,:]) / 20
 
+ref_dist = 20  # distance of reference marking on image in meters (bottom right corner)
+pix_per_m = np.linalg.norm(unit_pts[0,:] - unit_pts[1,:]) / ref_dist
+
+# create Gokart instance
 gokart = Gokart(mass=200, f_grip=200, f_motor=2000, k_drag=0.6125)
 
-# define track points, if they have not yet been defined
-filename_suffix = "fifth_curve"
-pts_filename = 'track_pts_' + filename_suffix + '.npy'
-if not os.path.isfile(pts_filename):
-    points = np.array(plt.ginput(500, timeout=600))
-    np.save(pts_filename, points)
-else:
-    points = np.load(pts_filename)
+# create track from defined points, ignore first two points which were used for reference distance
+track = Track(points[2:,:], points_on_line=5, pix_to_m_ratio=pix_per_m)
 
-# create track from defined points
-track = Track(points, points_on_line=7, pix_to_m_ratio=pix_per_m)
+# get all waypoints by interpolating additional points between each two border points on track
 all_pts = np.array(track.interpolated_track_points_mat)
 all_pts = all_pts.reshape([all_pts.shape[0]*track.points_on_line,2])
 
-# load path if it already exists in a file
-if os.path.isfile('path_' + filename_suffix + '.txt'):
-    with open('path_' + filename_suffix + '.txt', 'rb') as f:
-        opt_path = pickle.load(f)
-        t_min = opt_path.get_time_track(gokart, 0.1)[0][-1]
-        interpolated_path = opt_path.get_interpolated_path(metric=False)
-else:
-    opt_path = None
-    t_min = np.inf
+# find optimal path using Monte Carlo method, redraw path each time better one is found
+N = int(100)
+t_min = np.inf
 
-# find optimal path
+# open figure to draw found paths
 fig = plt.figure()
 axes = fig.add_subplot(111)
-N = int(1e6)
-for _ in tqdm(range(N)):
+for _ in range(N):
     path = track.get_random_path()
-    tvec,_ = path.get_time_track(gokart, 0.1)
-    if tvec[-1] < t_min:
-        with open('path_' + filename_suffix+ '.txt', 'wb') as f:
-            pickle.dump(path, f)
 
-        t_min = tvec[-1]
+    # calculate time needed to complete the track using defined gokart
+    tvec,_ = path.get_time_track(gokart, 0.1)
+
+    # check if this path is better in terms of time needed to complete it
+    path_duration = tvec[-1]
+    if path_duration < t_min:
+
+        t_min = path_duration
         opt_path = path
 
+        interpolated_path = path.get_interpolated_path(metric=False)
+
+        # redraw new path
         axes.cla()
         axes.imshow(track_image_arr)
         axes.plot(all_pts[:, 0], all_pts[:, 1], 'r+')
@@ -66,6 +74,7 @@ for _ in tqdm(range(N)):
         plt.draw()
         plt.pause(0.3)
         
-        print(t_min)
+        print("New optimal path found! Duration of driving: {:.3f} seconds".format(t_min))
 
-plt.show()
+gda = GokartDriveAnimation(track_image_arr, opt_path, gokart)
+gda.show()
