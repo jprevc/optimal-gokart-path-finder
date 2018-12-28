@@ -36,7 +36,7 @@ class Gokart:
         :rtype: float
         """
 
-        return self.k_drag*v**2 if v > 0 else 0
+        return self.k_drag * v**2.0 if v > 0 else 0
 
     def get_acceleration(self, v):
         """
@@ -75,21 +75,54 @@ class Path:
     """
 
     def __init__(self, pts, smooth_coef:float=0, num_interp_pts:int=1000, pix_to_m_ratio=1):
-        self.pts = pts
-        self.smooth_coef = smooth_coef
-        self.num_interp_pts = num_interp_pts
-        self._u = np.linspace(0, 1, self.num_interp_pts)
-        self.pix_to_m_ratio = pix_to_m_ratio
+        self._pts = pts
+        self._smooth_coef = smooth_coef
+        self._num_interp_pts = num_interp_pts
+        self._u = np.linspace(0, 1, self._num_interp_pts)
+        self._pix_to_m_ratio = pix_to_m_ratio
+        self._set_spline_interpolation_rep()
+        self._set_radius()
 
     @property
-    def _spline_interpolation_rep(self):
-        """
-        Calculates spline interpolation representation.
-        """
-        return interpolate.splprep([self.pts[:, 0] / self.pix_to_m_ratio,
-                                    self.pts[:, 1] / self.pix_to_m_ratio],
-                                    s=self.smooth_coef)[0]
+    def num_interp_points(self):
+        return self._num_interp_pts
 
+    @num_interp_points.setter
+    def num_interp_points(self, val):
+        self._num_interp_pts = val
+        self._u = np.linspace(0, 1, self._num_interp_pts)
+
+    @property
+    def pts(self):
+        return self._pts
+
+    @pts.setter
+    def pts(self, val):
+        self._pts = val
+        self._set_spline_interpolation_rep()
+
+    @property
+    def smooth_coef(self):
+        return self._smooth_coef
+
+    @smooth_coef.setter
+    def smooth_coef(self, val):
+        self._smooth_coef = val
+        self._set_spline_interpolation_rep()
+
+    @property
+    def pix_to_m_ratio(self):
+        return self._pix_to_m_ratio
+
+    @pix_to_m_ratio.setter
+    def pix_to_m_ratio(self, val):
+        self._pix_to_m_ratio = val
+        self._set_spline_interpolation_rep()
+
+    def _set_spline_interpolation_rep(self):
+        self._spline_interpolation_rep = interpolate.splprep([self.pts[:, 0] / self.pix_to_m_ratio,
+                                         self.pts[:, 1] / self.pix_to_m_ratio],
+                                         s=self.smooth_coef)[0]
 
     def get_interpolated_path(self, metric=True):
         """
@@ -120,14 +153,15 @@ class Path:
         """
         der = interpolate.spalde(self._u, self._spline_interpolation_rep)
 
-        der_arr = np.zeros((len(self._u), 2))
-        for i in range(len(self._u)):
-            der_arr[i, :] = np.array([der[0][i][order], der[1][i][order]])
+        der_arr = np.array(der)
 
-        return der_arr
+        return der_arr[:,:,order].T
 
     @property
     def radius(self):
+        return self._radius
+
+    def _set_radius(self):
         """
         Computes turning radius for each point on the track.
         """
@@ -140,7 +174,7 @@ class Path:
         xdd = der2[:, 0]
         ydd = der2[:, 1]
 
-        return ((xd**2 + yd**2)**3) / ((xd*ydd - yd*xdd)**2)
+        self._radius = ((xd**2 + yd**2)**3) / ((xd*ydd - yd*xdd)**2)
 
     def get_v_max(self, gokart: Gokart):
         """
@@ -173,9 +207,7 @@ class Path:
         """
         interp_path = self.get_interpolated_path(metric)
 
-        path_len = 0
-        for i in range(len(self._u)-1):
-            path_len += np.linalg.norm(interp_path[i+1,:] - interp_path[i,:])
+        path_len = np.sum(np.linalg.norm(np.diff(interp_path, axis=0), axis=1))
 
         return path_len
 
@@ -227,9 +259,9 @@ class Path:
 
             # check if calculated speed is more than theoretically fastest for
             # current path radius
-            if v > float(v_max_interp(p_norm)):
-                v = float(v_max_interp(p_norm))
-
+            v_max_interp_eval = float(v_max_interp(p_norm))
+            if v > v_max_interp_eval:
+                v = v_max_interp_eval
 
             # get normalised position for next iteration
             p_norm = p_norm + dt * v / len_path
@@ -275,19 +307,33 @@ class Track:
         if border_pts.shape[0] % 2 != 0:
             raise ValueError("Number of points in 'border_pts' array should be even.")
 
-        self.num_lines = int(border_pts.shape[0] / 2)
+        self._num_lines = int(border_pts.shape[0] / 2)
 
-        self.points_on_line = points_on_line
+        self._points_on_line = points_on_line
+
+        self._set_interpolated_track_points_mat()
 
     @property
-    def interpolated_track_points_mat(self):
-        """
-        Returns point positions for each of the defined line on a track,
+    def num_lines(self):
+        return self._num_lines
 
-        :return: Point positions in a list, where length of list is equal to
-                 number of lines on a track. Each list entry contains M points,
-                 where M is specified by points_on_line object field.
-        """
+    @num_lines.setter
+    def num_lines(self, val):
+        # when num_lines attribute gets changed, track points need to be recalculated
+        self._num_lines = val
+        self._set_interpolated_track_points_mat()
+
+    @property
+    def points_on_line(self):
+        return self._points_on_line
+
+    @points_on_line.setter
+    def points_on_line(self, val):
+        # when points_on_line attribute gets changed, track points need to be recalculated
+        self._points_on_line = val
+        self._set_interpolated_track_points_mat()
+
+    def _set_interpolated_track_points_mat(self):
         points_arr = []
         for i in range(self.num_lines):
             line_rep,u = interpolate.splprep([self.border_pts[i*2:i*2+2,0],
@@ -298,7 +344,19 @@ class Track:
             line_pts = interpolate.splev(np.linspace(0, 1, self.points_on_line), line_rep)
             points_arr.append(np.array(line_pts).T)
 
-        return points_arr
+        self._interpolated_track_points_mat = points_arr
+
+    @property
+    def interpolated_track_points_mat(self):
+        """
+        Returns point positions for each of the defined line on a track.
+
+        :return: Point positions in a list, where length of list is equal to
+                 number of lines on a track. Each list entry contains M points,
+                 where M is specified by points_on_line object field.
+        """
+
+        return self._interpolated_track_points_mat
 
     def _get_path_point_mat(self, point_inds):
         """
@@ -313,11 +371,10 @@ class Track:
         :return: N by 2 matrix of points, which define a path.
         :rtype: np.array
         """
-        path_point_mat = np.zeros((self.num_lines, 2))
-        for i, point_ind in enumerate(point_inds):
-            path_point_mat[i, :] = self.interpolated_track_points_mat[i][point_ind, :]
+        path_point_mat = np.array(self.interpolated_track_points_mat)
 
-        return path_point_mat
+        return path_point_mat[np.arange(self.num_lines), point_inds, :]
+
 
     def get_random_path(self, smooth_coef=0, num_interp_points=1000):
         """
