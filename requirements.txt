@@ -2,3 +2,4 @@ Pillow
 scipy
 numpy
 matplotlib
+imageio

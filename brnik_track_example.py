@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
-from scipy import misc
+import imageio
 import numpy as np
 import os
 from optimal_path_classes import Gokart, Track, GokartDriveAnimation
 
 # read image on which track is visible
-track_image_arr = misc.imread('brnik_track_snip.png')
+track_image_arr = imageio.imread('brnik_track_snip.png')
 
 # load predefined track points from a .npy file, if they are not already defined, open track image
 # for user to define them by clicking on the track borders
