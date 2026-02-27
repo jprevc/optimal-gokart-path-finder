@@ -24,6 +24,8 @@ The program:
 ## Screenshot / animation
 
 ![Track example](docs/brnik-track-snip.PNG)
+![GA path finder](docs/ga-path-finder.gif)
+![Gokart simulation](docs/gokart-simulation.gif)
 
 ---
 
@@ -36,26 +38,11 @@ The program:
    cd optimal-gokart-path-finder
    ```
 
-2. Create and activate a virtual environment (recommended):
+2. Install the package and dependencies with **uv**:
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate   # Linux/macOS
-   # or:  .venv\Scripts\activate   # Windows
-   ```
-
-3. Install the package and dependencies with **uv**:
-
-   ```bash
-   # Install uv if you don't have it yet:
-   # pip install uv
-
-   # From the project root:
+   ```bash 
    uv sync
    ```
-
-   This reads `pyproject.toml` (and `uv.lock` when present) and installs the project plus its dependencies, including dev tools like Ruff, Black, Mypy, and pytest.
-
 ---
 
 ## Usage
