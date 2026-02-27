@@ -16,18 +16,14 @@ The program:
 
 ### Physics model (brief)
 
-- **Longitudinal:** Motor force \(F_{\text{motor}}\) vs quadratic drag \(F_{\text{drag}} = k_{\text{drag}}\,v^2\). Acceleration: \(a = (F_{\text{motor}} - F_{\text{drag}}) / m\).
-- **Lateral:** Max cornering speed at each point is limited by grip: \(v_{\max} = \sqrt{F_{\text{grip}}\,R / m}\), where \(R\) is the local radius of curvature from the path spline. The simulation never exceeds this speed on corners.
+- **Longitudinal:** Motor force `F_motor` vs quadratic drag `F_drag = k_drag * v^2`. Acceleration: `a = (F_motor - F_drag) / m`.
+- **Lateral:** Max cornering speed at each point is limited by grip: `v_max = sqrt(F_grip * R / m)`, where `R` is the local radius of curvature from the path spline. The simulation never exceeds this speed on corners.
 
 ---
 
 ## Screenshot / animation
 
-```text
-![Track example](docs/brnik-track-snip.png)
-```
-
-*(Create a `docs` folder and add your GIF or screenshot as `animation.gif` or `screenshot.png`.)*
+![Track example](docs/brnik-track-snip.PNG)
 
 ---
 
@@ -94,9 +90,9 @@ You can tune the go-kart by passing these arguments to `Gokart(mass, f_grip, f_m
 | Parameter   | Meaning                         | Unit   | Example / note                          |
 |------------|----------------------------------|--------|----------------------------------------|
 | `mass`     | Total mass (kart + driver)       | kg     | e.g. 200                               |
-| `f_grip`   | Lateral grip force (cornering)   | N      | Limits \(v_{\max}\) in corners          |
+| `f_grip`   | Lateral grip force (cornering)   | N      | Limits v_max in corners                 |
 | `f_motor`  | Motor thrust (forward force)    | N      | e.g. 2000                              |
-| `k_drag`   | Drag coefficient (\(F = k_{\text{drag}}\,v^2\)) | N·s²/m² | e.g. 0.6125                    |
+| `k_drag`   | Drag coefficient (F = k_drag * v^2) | N·s²/m² | e.g. 0.6125                    |
 
 Higher `f_grip` allows higher cornering speed; higher `f_motor` and lower `k_drag` give higher straight-line speed.
 
@@ -118,8 +114,8 @@ Higher `f_grip` allows higher cornering speed; higher `f_motor` and lower `k_dra
 
 4. **Physics simulation**  
    Lap time is computed by stepping in time with a fixed `dt`:
-   - Update speed: \(v \leftarrow v + \Delta t \cdot a(v)\), with \(a = (F_{\text{motor}} - k_{\text{drag}}\,v^2) / m\).
-   - Cap speed at the current point’s \(v_{\max}\) (grip limit).
+   - Update speed: `v <- v + dt * a(v)`, with `a = (F_motor - k_drag * v^2) / m`.
+   - Cap speed at the current point’s `v_max` (grip limit).
    - Advance position along the path based on \(v\) and path length.
    The simulation stops when the kart has completed one lap; total time is the lap time used for comparison.
 
