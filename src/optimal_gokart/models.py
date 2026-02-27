@@ -152,9 +152,13 @@ class Path:
         # Also drop the last point if it coincides with the first (periodic).
         if np.linalg.norm(pts_scaled[-1] - pts_scaled[0]) == 0:
             pts_scaled = pts_scaled[:-1]
+        # splprep requires m > k; lower k gracefully when few unique points remain
+        # (e.g. a short path whose endpoints coincide after wraparound dedup).
+        k = min(3, len(pts_scaled) - 1)
         self._spline_interpolation_rep = interpolate.splprep(
             [pts_scaled[:, 0], pts_scaled[:, 1]],
             s=self.smooth_coef,
+            k=k,
             per=True,
         )[0]
 

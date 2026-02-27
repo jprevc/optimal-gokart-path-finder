@@ -105,22 +105,13 @@ class TestGokartDriveAnimation:
     """Tests for GokartDriveAnimation."""
 
     def test_init_with_path_sets_attributes(self) -> None:
-        # 4 lines so path has 4 points (splprep requires m > k=3)
-        border_pts = np.array(
-            [
-                [0.0, 0.0],
-                [10.0, 0.0],
-                [10.0, 2.5],
-                [10.0, 5.0],
-                [5.0, 5.0],
-                [0.0, 5.0],
-                [0.0, 2.5],
-                [0.0, 0.0],
-            ],
-            dtype=float,
+        # Build a Path directly with 4 known unique points to avoid relying on
+        # random selection (get_random_path can produce a wraparound duplicate
+        # that drops a point below the splprep k=3 threshold non-deterministically).
+        path_pts = np.array(
+            [[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [0.0, 5.0]], dtype=float
         )
-        track = Track(border_pts, points_on_line=2, pix_to_m_ratio=1.0)
-        path = track.get_random_path(num_interp_points=50)
+        path = Path(path_pts, num_interp_pts=50)
         kart = Gokart(mass=100.0, f_grip=500.0, f_motor=200.0, k_drag=0.5)
         img = np.zeros((100, 100, 3), dtype=np.uint8)
         animation = GokartDriveAnimation(img, path, kart, dt=0.1)
