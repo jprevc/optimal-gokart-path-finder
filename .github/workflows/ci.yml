@@ -22,18 +22,14 @@ jobs:
         run: uv sync
 
       - name: Run Ruff
-        continue-on-error: true
         run: uv run ruff check .
 
       - name: Run Black (check only)
-        continue-on-error: true
         run: uv run black --check .
 
       - name: Run Mypy
-        continue-on-error: true
         run: uv run mypy .
 
       - name: Run tests
-        continue-on-error: true
         run: uv run pytest
 
