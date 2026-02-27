@@ -8,6 +8,7 @@ algorithms against a given track image.
 from __future__ import annotations
 
 import argparse
+import importlib.resources
 from pathlib import Path
 from typing import Sequence
 
@@ -20,8 +21,9 @@ from .models import Gokart, Track
 from .visualization import GokartDriveAnimation
 
 
-DEFAULT_TRACK_IMAGE = Path("docs") / "brnik-track-snip.PNG"
-DEFAULT_POINTS_FILE = Path("points.npy")
+def _bundled(filename: str) -> Path:
+    """Return the path to a file bundled inside the package's data/ directory."""
+    return Path(str(importlib.resources.files("optimal_gokart").joinpath(f"data/{filename}")))
 
 MAX_CLICK_POINTS = 500
 CLICK_TIMEOUT_SEC = 150
@@ -32,11 +34,8 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--track-image",
         type=Path,
-        default=DEFAULT_TRACK_IMAGE,
-        help=(
-            "Path to the track image. "
-            "Defaults to the bundled 'docs/brnik-track-snip.PNG' relative to the project root."
-        ),
+        default=None,
+        help="Path to the track image. Defaults to the bundled Brnik track image.",
     )
     parser.add_argument(
         "--points-file",
@@ -199,12 +198,11 @@ def _load_track_image(track_image_path: Path) -> np.ndarray:
 
 def _load_or_collect_points(
     track_image_arr: np.ndarray,
-    points_file: Path | None,
+    points_file: Path,
     save_points: Path | None,
 ) -> np.ndarray:
-    pts_path = points_file or DEFAULT_POINTS_FILE
-    if pts_path.is_file():
-        return np.load(pts_path)
+    if points_file.is_file():
+        return np.load(points_file)
 
     fig = plt.figure()
     axes = fig.add_subplot(111)
@@ -217,7 +215,7 @@ def _load_or_collect_points(
 
     if save_points is not None:
         np.save(save_points, points)
-    elif points_file is not None:
+    else:
         np.save(points_file, points)
 
     plt.close(fig)
@@ -278,19 +276,16 @@ def _build_finder(args: argparse.Namespace) -> PathFinder:
 
 
 def _run(args: argparse.Namespace) -> None:
-    project_root = Path(__file__).resolve().parent.parent
+    track_image_path: Path = args.track_image or _bundled("brnik-track-snip.PNG")
+    points_file: Path = args.points_file or _bundled("points.npy")
+    save_points: Path | None = args.save_points
 
-    track_image_path = (
-        args.track_image
-        if args.track_image.is_absolute()
-        else project_root / args.track_image
-    )
     track_image_arr = _load_track_image(track_image_path)
 
     points = _load_or_collect_points(
         track_image_arr=track_image_arr,
-        points_file=args.points_file,
-        save_points=args.save_points,
+        points_file=points_file,
+        save_points=save_points,
     )
 
     track, gokart, _ = _prepare_track_and_gokart(

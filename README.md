@@ -46,15 +46,15 @@ The program:
 
 ## Usage
 
-### Running the example
+### Command-line interface (CLI)
 
-From the project root, run:
+Quick start with default track and preselected points:
 
 ```bash
-python examples/brnik_track_example.py
+optimal-gokart ga
 ```
 
-Place the track image at the project root: `brnik_track_snip.png` (or change the path in the script). The script also looks for `points.npy` at the project root.
+Run `optimal-gokart --help` for all available options.
 
 ### Interactive track definition
 
@@ -118,7 +118,7 @@ Higher `f_grip` allows higher cornering speed; higher `f_motor` and lower `k_dra
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│  Load track image & border points (click or load points.npy)     │
+│  Load track image & border points (click or load points.npy)    │
 └───────────────────────────────┬─────────────────────────────────┘
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -147,13 +147,14 @@ optimal-gokart-path-finder/
 ├── src/
 │   └── optimal_gokart/
 │       ├── __init__.py
+│       ├── algorithms.py      # GeneticAlgorithmPathFinder, MonteCarloPathFinder
+│       ├── cli.py             # optimal-gokart entry point
 │       ├── models.py          # Gokart, Path, Track
-│       └── visualization.py  # GokartDriveAnimation
+│       ├── visualization.py   # GokartDriveAnimation
+│       └── data/              # bundled track image and default points
 ├── tests/
 │   ├── test_models.py
 │   └── test_optimal_path_classes.py
-├── examples/
-│   └── brnik_track_example.py
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
