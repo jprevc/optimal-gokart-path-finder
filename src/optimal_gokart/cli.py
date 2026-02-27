@@ -16,11 +16,13 @@ import imageio
 import matplotlib
 
 matplotlib.use("Qt5Agg")
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .algorithms import GeneticAlgorithmPathFinder, MonteCarloPathFinder, PathFinder
 from .models import Gokart, Track
+from .models import Path as ModelPath
 from .visualization import GokartDriveAnimation
 
 
@@ -225,7 +227,7 @@ def _load_track_image(track_image_path: Path) -> np.ndarray:
 
 def _is_valid_points(arr: np.ndarray) -> bool:
     """Return True if *arr* looks like a usable (N, 2) border-points array."""
-    return arr.ndim == 2 and arr.shape[1] == 2 and arr.shape[0] >= 3
+    return bool(arr.ndim == 2 and arr.shape[1] == 2 and arr.shape[0] >= 3)
 
 
 def _load_or_collect_points(
@@ -234,7 +236,7 @@ def _load_or_collect_points(
     save_points: Path | None,
 ) -> np.ndarray:
     if points_file is not None and points_file.is_file():
-        pts = np.load(points_file)
+        pts: np.ndarray = np.load(points_file)
         if _is_valid_points(pts):
             return pts
         print(
@@ -247,7 +249,7 @@ def _load_or_collect_points(
     axes.imshow(track_image_arr)
     plt.title("Click border points. Middle-click (or wheel) when done.")
 
-    points = np.array(
+    points: np.ndarray = np.array(
         plt.ginput(MAX_CLICK_POINTS, timeout=CLICK_TIMEOUT_SEC),
         dtype=float,
     )
@@ -354,7 +356,7 @@ def _run(args: argparse.Namespace) -> None:
     axes = fig.add_subplot(111)
     plt.show(block=False)
 
-    def on_new_best(best_path, best_time, generation):
+    def on_new_best(best_path: ModelPath, best_time: float, generation: int) -> None:
         interpolated_path = best_path.get_interpolated_path(metric=False)
 
         axes.cla()

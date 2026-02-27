@@ -1,14 +1,14 @@
 from optimal_gokart import Gokart, Path, Track
 
 
-def test_import():
+def test_import() -> None:
     """Package exports Gokart, Path, Track."""
     assert Gokart is not None
     assert Path is not None
     assert Track is not None
 
 
-def test_track_get_random_path_returns_path():
+def test_track_get_random_path_returns_path() -> None:
     """Track.get_random_path returns a Path instance."""
     import numpy as np
 

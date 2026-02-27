@@ -1,6 +1,12 @@
 """Animation and visualization: GokartDriveAnimation."""
 
+from __future__ import annotations
+
+from collections.abc import Generator
+from typing import Any
+
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.animation import FuncAnimation
 
 from .models import Gokart, Path
@@ -32,13 +38,13 @@ class GokartDriveAnimation:
 
     def __init__(
         self,
-        track_image_arr,
+        track_image_arr: np.ndarray,
         path: Path,
         gokart: Gokart,
-        dt=0.1,
-        pstyle="ro",
-        interval=10,
-    ):
+        dt: float = 0.1,
+        pstyle: str = "ro",
+        interval: int = 10,
+    ) -> None:
         self.track_image_arr = track_image_arr
         self.path = path
         self.gokart = gokart
@@ -48,7 +54,7 @@ class GokartDriveAnimation:
         if path:
             _, self.ttrack = path.get_time_track(gokart, dt=dt)
 
-    def show(self):
+    def show(self) -> None:
         """
         Shows animation.
         """
@@ -62,16 +68,16 @@ class GokartDriveAnimation:
             self.pstyle,
         )
 
-        def ani(coords):
+        def ani(coords: tuple[Any, Any]) -> Any:
             point.set_data(
                 [coords[0] * self.path.pix_to_m_ratio],
                 [coords[1] * self.path.pix_to_m_ratio],
             )
             return point
 
-        def frames():
+        def frames() -> Generator[tuple[Any, Any], None, None]:
             yield from zip(self.ttrack[0], self.ttrack[1])
 
-        ani = FuncAnimation(fig, ani, frames=frames, interval=self.interval)
+        _anim = FuncAnimation(fig, ani, frames=frames, interval=self.interval)
 
         plt.show()
