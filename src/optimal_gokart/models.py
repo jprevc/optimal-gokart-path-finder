@@ -133,11 +133,14 @@ class Path:
         self._set_spline_interpolation_rep()
 
     def _set_spline_interpolation_rep(self):
+        pts_scaled = self.pts / self.pix_to_m_ratio
+        # Remove consecutive duplicate points to avoid zero chord-lengths that
+        # cause splprep to fail with "Invalid inputs".
+        dists = np.linalg.norm(np.diff(pts_scaled, axis=0), axis=1)
+        keep = np.concatenate(([True], dists > 0))
+        pts_scaled = pts_scaled[keep]
         self._spline_interpolation_rep = interpolate.splprep(
-            [
-                self.pts[:, 0] / self.pix_to_m_ratio,
-                self.pts[:, 1] / self.pix_to_m_ratio,
-            ],
+            [pts_scaled[:, 0], pts_scaled[:, 1]],
             s=self.smooth_coef,
         )[0]
 
