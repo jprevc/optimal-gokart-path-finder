@@ -3,8 +3,8 @@
 import os
 import random
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
-from typing import Callable, Optional
 
 from .models import Gokart, Path, Track
 
@@ -42,7 +42,7 @@ class PathFinder(ABC):
         self,
         track: Track,
         gokart: Gokart,
-        progress_callback: Optional[ProgressCallback] = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> Path:
         """Return the best :class:`Path` found on *track* for *gokart*.
 
@@ -123,7 +123,10 @@ def _tournament_select(
 
 
 def _uniform_crossover(parent_a: list[int], parent_b: list[int]) -> list[int]:
-    return [a if random.random() < 0.5 else b for a, b in zip(parent_a, parent_b)]
+    return [
+        a if random.random() < 0.5 else b
+        for a, b in zip(parent_a, parent_b, strict=False)
+    ]
 
 
 def _mutate(
@@ -172,7 +175,7 @@ class MonteCarloPathFinder(PathFinder):
         self,
         track: Track,
         gokart: Gokart,
-        progress_callback: Optional[ProgressCallback] = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> Path:
         n_workers = _resolve_n_jobs(self.n_jobs)
         points_on_line = track.points_on_line
@@ -191,9 +194,9 @@ class MonteCarloPathFinder(PathFinder):
         )
 
         best_time: float = float("inf")
-        best_path: Optional[Path] = None
+        best_path: Path | None = None
 
-        for i, (chrom, t) in enumerate(zip(chromosomes, fitnesses)):
+        for i, (chrom, t) in enumerate(zip(chromosomes, fitnesses, strict=False)):
             if t < best_time:
                 best_time = t
                 best_path = _chromosome_to_path(chrom, track)  # full resolution
@@ -247,7 +250,7 @@ class GeneticAlgorithmPathFinder(PathFinder):
         self,
         track: Track,
         gokart: Gokart,
-        progress_callback: Optional[ProgressCallback] = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> Path:
         n_workers = _resolve_n_jobs(self.n_jobs)
         num_lines = track.num_lines
@@ -261,7 +264,7 @@ class GeneticAlgorithmPathFinder(PathFinder):
 
         best_chromosome: list[int] = population[0]
         best_time: float = float("inf")
-        best_path: Optional[Path] = None
+        best_path: Path | None = None
 
         for generation in range(self.num_generations):
             fitnesses = _evaluate_batch(

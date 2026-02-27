@@ -76,7 +76,7 @@ class GokartDriveAnimation:
             return point
 
         def frames() -> Generator[tuple[Any, Any], None, None]:
-            yield from zip(self.ttrack[0], self.ttrack[1])
+            yield from zip(self.ttrack[0], self.ttrack[1], strict=False)
 
         _anim = FuncAnimation(fig, ani, frames=frames, interval=self.interval)
 
