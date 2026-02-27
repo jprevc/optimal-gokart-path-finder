@@ -1,6 +1,0 @@
-# Pinned dependencies (match pyproject.toml)
-Pillow>=10.0
-scipy>=1.11
-numpy>=1.25
-matplotlib>=3.7
-imageio>=2.31
