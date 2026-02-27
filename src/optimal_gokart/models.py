@@ -1,9 +1,11 @@
+"""Physics and track models: Gokart, Path, and Track."""
+
+import random
+from itertools import product
+
 import numpy as np
 from scipy import interpolate
-from matplotlib.animation import FuncAnimation
-import matplotlib.pyplot as plt
-from itertools import product
-import random
+
 
 class Gokart:
     """
@@ -15,10 +17,14 @@ class Gokart:
     :param f_grip: Grip force in N (Newtons)
     :type f_grip: float
 
-    :param max_speed: maximum possible speed of gokart in m/s
-    :type max_speed: float
+    :param f_motor: Motor force in N (Newtons)
+    :type f_motor: float
+
+    :param k_drag: Drag coefficient (air resistance proportional to v^2)
+    :type k_drag: float
 
     """
+
     def __init__(self, mass, f_grip, f_motor, k_drag):
         self.mass = mass
         self.f_grip = f_grip
@@ -74,7 +80,14 @@ class Path:
     :type pix_to_m_ratio: float
     """
 
-    def __init__(self, pts, smooth_coef:float=0, num_interp_pts:int=1000, pix_to_m_ratio=1):
+    def __init__(
+        self, pts, smooth_coef: float = 0, num_interp_pts: int = 1000, pix_to_m_ratio=1
+    ):
+        pts = np.asarray(pts)
+        if pts.ndim != 2 or pts.shape[0] < 2 or pts.shape[1] < 2:
+            raise ValueError(
+                "pts must be a 2D array with at least 2 rows and 2 columns"
+            )
         self._pts = pts
         self._smooth_coef = smooth_coef
         self._num_interp_pts = num_interp_pts
@@ -120,9 +133,13 @@ class Path:
         self._set_spline_interpolation_rep()
 
     def _set_spline_interpolation_rep(self):
-        self._spline_interpolation_rep = interpolate.splprep([self.pts[:, 0] / self.pix_to_m_ratio,
-                                         self.pts[:, 1] / self.pix_to_m_ratio],
-                                         s=self.smooth_coef)[0]
+        self._spline_interpolation_rep = interpolate.splprep(
+            [
+                self.pts[:, 0] / self.pix_to_m_ratio,
+                self.pts[:, 1] / self.pix_to_m_ratio,
+            ],
+            s=self.smooth_coef,
+        )[0]
 
     def get_interpolated_path(self, metric=True):
         """
@@ -142,7 +159,7 @@ class Path:
 
         return interpolated_path if metric else interpolated_path * self.pix_to_m_ratio
 
-    def _get_interp_path_der(self, order:int=1):
+    def _get_interp_path_der(self, order: int = 1):
         """
         Calculates derivative of the interpolated path.
 
@@ -155,7 +172,7 @@ class Path:
 
         der_arr = np.array(der)
 
-        return der_arr[:,:,order].T
+        return der_arr[:, :, order].T
 
     @property
     def radius(self):
@@ -174,7 +191,8 @@ class Path:
         xdd = der2[:, 0]
         ydd = der2[:, 1]
 
-        self._radius = ((xd**2 + yd**2)**3) / ((xd*ydd - yd*xdd)**2)
+        denom = (xd * ydd - yd * xdd) ** 2
+        self._radius = np.where(denom > 1e-10, (xd**2 + yd**2) ** 3 / denom, np.inf)
 
     def get_v_max(self, gokart: Gokart):
         """
@@ -194,18 +212,14 @@ class Path:
         return v_max_arr
 
     @property
-    def path_length(self, metric=True):
+    def path_length(self) -> float:
         """
-        Returns path length.
-
-        :param metric: True, if calculated point's units should be in meters
-                       (applicable only if pix_to_m_ratio was defined),
-        :type metric: bool
+        Returns path length (in meters if pix_to_m_ratio was defined).
 
         :return: Calculated length of the path.
         :rtype: float
         """
-        interp_path = self.get_interpolated_path(metric)
+        interp_path = self.get_interpolated_path(True)
 
         path_len = np.sum(np.linalg.norm(np.diff(interp_path, axis=0), axis=1))
 
@@ -255,7 +269,7 @@ class Path:
                 break
 
             # get speed for next iteration
-            v = v + dt*gokart.get_acceleration(v)
+            v = v + dt * gokart.get_acceleration(v)
 
             # check if calculated speed is more than theoretically fastest for
             # current path radius
@@ -300,6 +314,7 @@ class Track:
 
 
     """
+
     def __init__(self, border_pts, points_on_line=2, pix_to_m_ratio=1):
         self.border_pts = border_pts
         self.pix_to_m_ratio = pix_to_m_ratio
@@ -336,12 +351,18 @@ class Track:
     def _set_interpolated_track_points_mat(self):
         points_arr = []
         for i in range(self.num_lines):
-            line_rep,u = interpolate.splprep([self.border_pts[i*2:i*2+2,0],
-                                             self.border_pts[i*2:i*2+2,1]],
-                                             k=1,
-                                             s=0)
+            line_rep, u = interpolate.splprep(
+                [
+                    self.border_pts[i * 2 : i * 2 + 2, 0],
+                    self.border_pts[i * 2 : i * 2 + 2, 1],
+                ],
+                k=1,
+                s=0,
+            )
 
-            line_pts = interpolate.splev(np.linspace(0, 1, self.points_on_line), line_rep)
+            line_pts = interpolate.splev(
+                np.linspace(0, 1, self.points_on_line), line_rep
+            )
             points_arr.append(np.array(line_pts).T)
 
         self._interpolated_track_points_mat = points_arr
@@ -375,7 +396,6 @@ class Track:
 
         return path_point_mat[np.arange(self.num_lines), point_inds, :]
 
-
     def get_random_path(self, smooth_coef=0, num_interp_points=1000):
         """
         Returns one random path from all of the possible paths on the track.
@@ -391,15 +411,19 @@ class Track:
         """
 
         # generate list of random point indexes for each line
-        rand_point_inds = [random.randint(0, self.points_on_line-1) for _ in range(self.num_lines)]
+        rand_point_inds = [
+            random.randint(0, self.points_on_line - 1) for _ in range(self.num_lines)
+        ]
 
         # get matrix of points on the path based on the random indexes
         path_point_mat = self._get_path_point_mat(rand_point_inds)
 
-        return Path(path_point_mat,
-                    smooth_coef=smooth_coef,
-                    num_interp_pts=num_interp_points,
-                    pix_to_m_ratio=self.pix_to_m_ratio)
+        return Path(
+            path_point_mat,
+            smooth_coef=smooth_coef,
+            num_interp_pts=num_interp_points,
+            pix_to_m_ratio=self.pix_to_m_ratio,
+        )
 
     def paths(self, smooth_coef=0, num_interp_points=1000):
         """
@@ -426,70 +450,9 @@ class Track:
         for comb in combs:
             path_point_mat = self._get_path_point_mat(comb)
 
-            yield Path(path_point_mat,
-                       smooth_coef=smooth_coef,
-                       num_interp_pts=num_interp_points,
-                       pix_to_m_ratio=self.pix_to_m_ratio)
-
-
-class GokartDriveAnimation:
-    """
-    Class which contains useful functions for showing animations of gokart's
-    driving.
-
-    :param track_image_arr: Array of image of the track.
-    :type track_image_arr: np.array
-
-    :param path: Gokart's driving path.
-    :type path: Path
-
-    :param gokart: Gokart which is driving on the path.
-    :type gokart: Gokart
-
-    :param dt: Time interval for the driving simulation
-    :type dt: float
-
-    :param pstyle: Style of the point which represents the gokart in the animation.
-    :type pstyle: str
-
-    :param interval: refresh interval for the animation in ms.
-    :type interval: int
-    """
-    def __init__(self, track_image_arr, path: Path, gokart: Gokart, dt=0.1, pstyle='ro', interval=10):
-        self.track_image_arr = track_image_arr
-        self.path = path
-        self.gokart = gokart
-        self.pstyle = pstyle
-        self.interval = interval
-
-        if path:
-            _, self.ttrack = path.get_time_track(gokart, dt=dt)
-
-    def show(self):
-        """
-        Shows animation.
-        """
-        fig = plt.figure()
-        axes = fig.add_subplot(111)
-        axes.imshow(self.track_image_arr)
-
-        point, = axes.plot([self.ttrack[0][0] * self.path.pix_to_m_ratio],
-                           [self.ttrack[1][0] * self.path.pix_to_m_ratio],
-                           self.pstyle)
-
-        def ani(coords):
-            point.set_data([coords[0] * self.path.pix_to_m_ratio],
-                           [coords[1] * self.path.pix_to_m_ratio])
-            return point
-
-        def frames():
-            for x_tt, y_tt in zip(self.ttrack[0], self.ttrack[1]):
-                yield x_tt, y_tt
-
-        ani = FuncAnimation(fig, ani, frames=frames, interval=self.interval)
-
-        plt.show()
-
-
-if __name__ == '__main__':
-    pass
+            yield Path(
+                path_point_mat,
+                smooth_coef=smooth_coef,
+                num_interp_pts=num_interp_points,
+                pix_to_m_ratio=self.pix_to_m_ratio,
+            )
