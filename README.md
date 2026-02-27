@@ -21,9 +21,8 @@ The program:
 
 ---
 
-## Screenshot / animation
+## Demo
 
-![Track example](docs/brnik-track-snip.PNG)
 ![GA path finder](docs/ga-path-finder.gif)
 ![Gokart simulation](docs/gokart-simulation.gif)
 
