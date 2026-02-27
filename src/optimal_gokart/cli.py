@@ -13,6 +13,9 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import imageio
+import matplotlib
+
+matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
