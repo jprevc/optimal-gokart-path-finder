@@ -1,7 +1,6 @@
-.idea/workspace.xml
-.idea/modules.xml
-.idea/misc.xml
-.idea/OptimalGokartPathFinder.iml
-.idea/vcs.xml
+.idea/
+__pycache__/
+.venv/
+src/optimal_gokart_path_finder.egg-info/
+
 points.npy
-__pycache__/OptimalPathClasses.cpython-35.pyc
