@@ -3,7 +3,7 @@ name = "optimal-gokart-path-finder"
 version = "0.1.0"
 description = "Monte Carlo-based go-kart path optimizer with physics simulation"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 dependencies = [
     "Pillow>=10.0",
     "scipy>=1.11",
@@ -35,7 +35,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py312"
 line-length = 88
 exclude = [".git", "__pycache__", ".venv", "venv"]
 
@@ -62,7 +62,7 @@ quote-style = "double"
 
 [tool.black]
 line-length = 88
-target-version = ["py39"]
+target-version = ["py312"]
 exclude = '''
 (
   \.git
@@ -73,9 +73,10 @@ exclude = '''
 '''
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 disallow_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_return_any = true
 warn_unused_configs = true
+exclude = [".venv", "venv"]
