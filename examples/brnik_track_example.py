@@ -1,4 +1,4 @@
-"""Brnik track example: interactive border selection and GA path search."""
+"""Brnik track example: interactive border selection and path search."""
 
 from pathlib import Path
 
@@ -6,19 +6,20 @@ import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimal_gokart import Gokart, GokartDriveAnimation, Track, find_optimal_path_ga
+from optimal_gokart import (
+    GeneticAlgorithmPathFinder,
+    Gokart,
+    GokartDriveAnimation,
+    Track,
+)
 
 # Project root (parent of examples/) for asset paths
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Named constants for interactive point selection and GA search
+# Named constants for interactive point selection
 MAX_CLICK_POINTS = 500
 CLICK_TIMEOUT_SEC = 150
 ANIMATION_PAUSE_SEC = 0.3
-
-# GA hyper-parameters
-GA_POPULATION_SIZE = 50
-GA_NUM_GENERATIONS = 50
 
 
 def main() -> None:
@@ -85,13 +86,8 @@ def main() -> None:
         )
 
     # find optimal path using a genetic algorithm
-    opt_path = find_optimal_path_ga(
-        track,
-        gokart,
-        population_size=GA_POPULATION_SIZE,
-        num_generations=GA_NUM_GENERATIONS,
-        progress_callback=on_new_best,
-    )
+    finder = GeneticAlgorithmPathFinder(population_size=50, num_generations=50)
+    opt_path = finder.find_optimal_path(track, gokart, progress_callback=on_new_best)
 
     animation = GokartDriveAnimation(track_image_arr, opt_path, gokart)
     animation.show()
