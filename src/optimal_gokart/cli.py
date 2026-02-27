@@ -11,6 +11,7 @@ import argparse
 import importlib.resources
 from collections.abc import Sequence
 from pathlib import Path
+from typing import cast
 
 import imageio
 import matplotlib
@@ -222,7 +223,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _load_track_image(track_image_path: Path) -> np.ndarray:
-    return imageio.imread(track_image_path)
+    return cast(np.ndarray, imageio.imread(track_image_path))
 
 
 def _is_valid_points(arr: np.ndarray) -> bool:
