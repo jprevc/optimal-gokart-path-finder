@@ -44,13 +44,17 @@ The program:
    # or:  .venv\Scripts\activate   # Windows
    ```
 
-3. Install the package and dependencies:
+3. Install the package and dependencies with **uv**:
 
    ```bash
-   pip install -e .
+   # Install uv if you don't have it yet:
+   # pip install uv
+
+   # From the project root:
+   uv sync
    ```
 
-   (Or install dependencies only: `pip install -r requirements.txt`; then run the example from the project root so that `optimal_gokart` is importable via `PYTHONPATH=src` or after `pip install -e .`.)
+   This reads `pyproject.toml` (and `uv.lock` when present) and installs the project plus its dependencies, including dev tools like Ruff, Black, Mypy, and pytest.
 
 ---
 
@@ -165,8 +169,6 @@ optimal-gokart-path-finder/
 ├── examples/
 │   └── brnik_track_example.py
 ├── pyproject.toml
-├── requirements.txt
+├── uv.lock
 └── README.md
 ```
-
-Optional: add `brnik_track_snip.png` (track image) and `points.npy` (saved border points) at the project root for the example.
