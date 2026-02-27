@@ -48,10 +48,22 @@ The program:
 
 ### Command-line interface (CLI)
 
-Quick start with default track and preselected points:
+Run the demo with the bundled track image and pre-selected points:
 
 ```bash
-optimal-gokart ga
+optimal-gokart --demo ga
+```
+
+Run on your own track image, selecting border points interactively:
+
+```bash
+optimal-gokart --track-image my_track.png --save-points my_points.npy ga
+```
+
+On subsequent runs, load the saved points directly:
+
+```bash
+optimal-gokart --track-image my_track.png --points-file my_points.npy ga
 ```
 
 Run `optimal-gokart --help` for all available options.
@@ -77,12 +89,12 @@ If no `--points-file` is given and the bundled default doesn't exist, the CLI op
 
 You can tune the go-kart physics via CLI flags (`--gokart-mass`, `--gokart-f-grip`, `--gokart-f-motor`, `--gokart-k-drag`):
 
-| Parameter   | Meaning                         | Unit   | Example / note                          |
-|------------|----------------------------------|--------|----------------------------------------|
-| `mass`     | Total mass (kart + driver)       | kg     | e.g. 200                               |
-| `f_grip`   | Lateral grip force (cornering)   | N      | Limits v_max in corners                 |
-| `f_motor`  | Motor thrust (forward force)    | N      | e.g. 2000                              |
-| `k_drag`   | Drag coefficient (F = k_drag * v^2) | N·s²/m² | e.g. 0.6125                    |
+| Parameter   | Meaning                             | Unit     | Example / note           |
+|-------------|-------------------------------------|----------|--------------------------|
+| `mass`      | Total mass (kart + driver)          | kg       | e.g. 200                 |
+| `f_grip`    | Lateral grip force (cornering)      | N        | Limits v_max in corners  |
+| `f_motor`   | Motor thrust (forward force)        | N        | e.g. 2000                |
+| `k_drag`    | Drag coefficient (F = k_drag * v^2) | N·s²/m²  | e.g. 0.6125              |
 
 Higher `f_grip` allows higher cornering speed; higher `f_motor` and lower `k_drag` give higher straight-line speed.
 
