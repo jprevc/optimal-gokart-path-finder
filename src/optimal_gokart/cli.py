@@ -77,13 +77,13 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--gokart-mass",
         type=float,
-        default=200.0,
+        default=300.0,
         help="Gokart mass in kg (including driver).",
     )
     parser.add_argument(
         "--gokart-f-grip",
         type=float,
-        default=200.0,
+        default=400.0,
         help="Grip force in Newtons.",
     )
     parser.add_argument(
@@ -282,7 +282,7 @@ def _prepare_track_and_gokart(
         k_drag=gokart_k_drag,
     )
 
-    return track, gokart, pix_per_m
+    return track, gokart
 
 
 def _build_finder(args: argparse.Namespace) -> PathFinder:
@@ -329,7 +329,7 @@ def _run(args: argparse.Namespace) -> None:
         save_points=save_points,
     )
 
-    track, gokart, _ = _prepare_track_and_gokart(
+    track, gokart = _prepare_track_and_gokart(
         points=points,
         points_on_line=args.points_on_line,
         ref_dist_m=args.ref_dist,
