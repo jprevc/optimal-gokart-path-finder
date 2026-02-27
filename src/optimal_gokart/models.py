@@ -292,7 +292,8 @@ class Path:
             else:
                 frac = idx_f - idx_lo
                 v_max_at_p = float(
-                    v_max_arr[idx_lo] + frac * (v_max_arr[idx_lo + 1] - v_max_arr[idx_lo])
+                    v_max_arr[idx_lo]
+                    + frac * (v_max_arr[idx_lo + 1] - v_max_arr[idx_lo])
                 )
             if v > v_max_at_p:
                 v = v_max_at_p

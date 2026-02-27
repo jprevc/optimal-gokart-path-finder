@@ -4,6 +4,7 @@ Covers: Gokart.get_f_resistance, get_acceleration; Path construction (valid/inva
 path_length, get_v_max; Track construction (even/odd border_pts), get_random_path;
 GokartDriveAnimation init. Uses optimal_gokart package (models + visualization).
 """
+
 import numpy as np
 import pytest
 

@@ -58,6 +58,7 @@ class PathFinder(ABC):
 # Module-level helpers (must be top-level so ProcessPoolExecutor can pickle them)
 # ---------------------------------------------------------------------------
 
+
 def _chromosome_to_path(
     chromosome: list[int],
     track: Track,
@@ -125,9 +126,15 @@ def _uniform_crossover(parent_a: list[int], parent_b: list[int]) -> list[int]:
     return [a if random.random() < 0.5 else b for a, b in zip(parent_a, parent_b)]
 
 
-def _mutate(chromosome: list[int], points_on_line: int, mutation_rate: float) -> list[int]:
+def _mutate(
+    chromosome: list[int], points_on_line: int, mutation_rate: float
+) -> list[int]:
     return [
-        random.randint(0, points_on_line - 1) if random.random() < mutation_rate else gene
+        (
+            random.randint(0, points_on_line - 1)
+            if random.random() < mutation_rate
+            else gene
+        )
         for gene in chromosome
     ]
 
@@ -135,6 +142,7 @@ def _mutate(chromosome: list[int], points_on_line: int, mutation_rate: float) ->
 # ---------------------------------------------------------------------------
 # Concrete finders
 # ---------------------------------------------------------------------------
+
 
 class MonteCarloPathFinder(PathFinder):
     """Path finder that samples random paths and keeps the fastest one.
@@ -264,18 +272,26 @@ class GeneticAlgorithmPathFinder(PathFinder):
             if fitnesses[gen_best_idx] < best_time:
                 best_time = fitnesses[gen_best_idx]
                 best_chromosome = population[gen_best_idx]
-                best_path = _chromosome_to_path(best_chromosome, track)  # full resolution
+                best_path = _chromosome_to_path(
+                    best_chromosome, track
+                )  # full resolution
 
                 if progress_callback is not None:
                     progress_callback(best_path, best_time, generation)
 
-            sorted_indices = sorted(range(self.population_size), key=lambda i: fitnesses[i])
+            sorted_indices = sorted(
+                range(self.population_size), key=lambda i: fitnesses[i]
+            )
             elites = [population[i] for i in sorted_indices[:num_elites]]
 
             new_population: list[list[int]] = list(elites)
             while len(new_population) < self.population_size:
-                parent_a = _tournament_select(population, fitnesses, self.tournament_size)
-                parent_b = _tournament_select(population, fitnesses, self.tournament_size)
+                parent_a = _tournament_select(
+                    population, fitnesses, self.tournament_size
+                )
+                parent_b = _tournament_select(
+                    population, fitnesses, self.tournament_size
+                )
                 child = _uniform_crossover(parent_a, parent_b)
                 child = _mutate(child, points_on_line, self.mutation_rate)
                 new_population.append(child)

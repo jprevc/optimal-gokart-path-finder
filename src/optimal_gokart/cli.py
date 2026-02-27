@@ -23,7 +23,10 @@ from .visualization import GokartDriveAnimation
 
 def _bundled(filename: str) -> Path:
     """Return the path to a file bundled inside the package's data/ directory."""
-    return Path(str(importlib.resources.files("optimal_gokart").joinpath(f"data/{filename}")))
+    return Path(
+        str(importlib.resources.files("optimal_gokart").joinpath(f"data/{filename}"))
+    )
+
 
 MAX_CLICK_POINTS = 500
 CLICK_TIMEOUT_SEC = 150
@@ -100,7 +103,9 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def _add_ga_subcommand(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def _add_ga_subcommand(
+    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+) -> None:
     parser_ga = subparsers.add_parser(
         "ga",
         help="Run the Genetic Algorithm path finder.",
@@ -267,14 +272,13 @@ def _prepare_track_and_gokart(
     gokart_f_motor: float,
     gokart_k_drag: float,
 ) -> tuple[Track, Gokart]:
-    fig_pts = plt.figure()
-    _ = fig_pts.add_subplot(111)
-
     # first two points define the reference distance (scale)
     unit_pts = points[:2, :]
     pix_per_m = float(np.linalg.norm(unit_pts[0, :] - unit_pts[1, :]) / ref_dist_m)
 
-    track = Track(points[2:, :], points_on_line=points_on_line, pix_to_m_ratio=pix_per_m)
+    track = Track(
+        points[2:, :], points_on_line=points_on_line, pix_to_m_ratio=pix_per_m
+    )
     gokart = Gokart(
         mass=gokart_mass,
         f_grip=gokart_f_grip,
@@ -318,7 +322,7 @@ def _run(args: argparse.Namespace) -> None:
         save_points: Path | None = None
     else:
         track_image_path = args.track_image  # guaranteed non-None by main()
-        points_file = args.points_file       # None → interactive selection
+        points_file = args.points_file  # None → interactive selection
         save_points = args.save_points
 
     track_image_arr = _load_track_image(track_image_path)
@@ -342,8 +346,10 @@ def _run(args: argparse.Namespace) -> None:
     all_pts = np.array(track.interpolated_track_points_mat)
     all_pts = all_pts.reshape([all_pts.shape[0] * track.points_on_line, 2])
 
+    plt.ion()
     fig = plt.figure()
     axes = fig.add_subplot(111)
+    plt.show(block=False)
 
     def on_new_best(best_path, best_time, generation):
         interpolated_path = best_path.get_interpolated_path(metric=False)
@@ -374,7 +380,9 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     if args.demo:
         if args.track_image or args.points_file or args.save_points:
-            parser.error("--demo cannot be combined with --track-image, --points-file, or --save-points.")
+            parser.error(
+                "--demo cannot be combined with --track-image, --points-file, or --save-points."
+            )
     else:
         if args.track_image is None:
             parser.error("--track-image is required unless --demo is used.")
@@ -384,4 +392,3 @@ def main(argv: Sequence[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
-
