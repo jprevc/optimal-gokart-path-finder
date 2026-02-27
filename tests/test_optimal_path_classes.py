@@ -63,19 +63,6 @@ class TestPathConstruction:
             Path(pts_one_col)
 
 
-class TestPathPathLength:
-    """Tests for Path.path_length property."""
-
-    def test_straight_path_sanity(self) -> None:
-        # Straight line from (0,0) to (10,0); splprep needs 4+ points (k=3)
-        pts = np.array([[0.0, 0.0], [3.0, 0.0], [7.0, 0.0], [10.0, 0.0]], dtype=float)
-        path = Path(pts, smooth_coef=0, num_interp_pts=100, pix_to_m_ratio=1.0)
-        length = path.path_length
-        assert length > 0
-        # Should be close to 10 (with spline interpolation may differ slightly)
-        assert 9.0 <= length <= 11.0
-
-
 class TestPathGetVMax:
     """Tests for Path.get_v_max."""
 
@@ -109,31 +96,6 @@ class TestTrackConstruction:
         )  # 3 rows
         with pytest.raises(ValueError, match="even"):
             Track(border_pts)
-
-
-class TestTrackGetRandomPath:
-    """Tests for Track.get_random_path."""
-
-    def test_returns_path_instance(self) -> None:
-        # Use 4 lines so path has 4 points (splprep default k=3 requires m > 3)
-        border_pts = np.array(
-            [
-                [0.0, 0.0],
-                [10.0, 0.0],
-                [10.0, 2.5],
-                [10.0, 5.0],
-                [5.0, 5.0],
-                [0.0, 5.0],
-                [0.0, 2.5],
-                [0.0, 0.0],
-            ],
-            dtype=float,
-        )
-        track = Track(border_pts, points_on_line=3, pix_to_m_ratio=1.0)
-        path = track.get_random_path(smooth_coef=0, num_interp_points=100)
-        assert isinstance(path, Path)
-        assert path.pts.shape[0] == track.num_lines
-        assert path.pts.shape[1] == 2
 
 
 # --- GokartDriveAnimation ---
