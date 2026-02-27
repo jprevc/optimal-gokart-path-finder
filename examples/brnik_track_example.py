@@ -1,4 +1,4 @@
-"""Brnik track example: interactive border selection and Monte Carlo path search."""
+"""Brnik track example: interactive border selection and GA path search."""
 
 from pathlib import Path
 
@@ -6,21 +6,24 @@ import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimal_gokart import Gokart, GokartDriveAnimation, Track
+from optimal_gokart import Gokart, GokartDriveAnimation, Track, find_optimal_path_ga
 
 # Project root (parent of examples/) for asset paths
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Named constants for interactive point selection and Monte Carlo search
+# Named constants for interactive point selection and GA search
 MAX_CLICK_POINTS = 500
 CLICK_TIMEOUT_SEC = 150
-NUM_ITERATIONS = 100
 ANIMATION_PAUSE_SEC = 0.3
+
+# GA hyper-parameters
+GA_POPULATION_SIZE = 50
+GA_NUM_GENERATIONS = 50
 
 
 def main() -> None:
     # read image on which track is visible
-    track_image_path = PROJECT_ROOT / "brnik_track_snip.png"
+    track_image_path = PROJECT_ROOT / "docs" / "brnik-track-snip.PNG"
     track_image_arr = imageio.imread(track_image_path)
 
     # load predefined track points from a .npy file, if they are not already defined, open track image
@@ -61,38 +64,34 @@ def main() -> None:
     all_pts = np.array(track.interpolated_track_points_mat)
     all_pts = all_pts.reshape([all_pts.shape[0] * track.points_on_line, 2])
 
-    # find optimal path using Monte Carlo method, redraw path each time better one is found
-    num_iterations = NUM_ITERATIONS
-    t_min = np.inf
-
     # open figure to draw found paths
     fig = plt.figure()
     axes = fig.add_subplot(111)
-    for _ in range(num_iterations):
-        path = track.get_random_path()
 
-        # calculate time needed to complete the track using defined gokart
-        tvec, _ = path.get_time_track(gokart, 0.1)
+    def on_new_best(best_path, best_time, generation):
+        interpolated_path = best_path.get_interpolated_path(metric=False)
 
-        # check if this path is better in terms of time needed to complete it
-        path_duration = tvec[-1]
-        if path_duration < t_min:
+        axes.cla()
+        axes.imshow(track_image_arr)
+        axes.plot(all_pts[:, 0], all_pts[:, 1], "r+")
+        axes.plot(interpolated_path[:, 0], interpolated_path[:, 1])
 
-            t_min = path_duration
-            opt_path = path
+        plt.draw()
+        plt.pause(ANIMATION_PAUSE_SEC)
 
-            interpolated_path = path.get_interpolated_path(metric=False)
+        print(
+            f"Generation {generation}: new best path found! "
+            f"Duration of driving: {best_time:.3f} seconds"
+        )
 
-            # redraw new path
-            axes.cla()
-            axes.imshow(track_image_arr)
-            axes.plot(all_pts[:, 0], all_pts[:, 1], "r+")
-            axes.plot(interpolated_path[:, 0], interpolated_path[:, 1])
-
-            plt.draw()
-            plt.pause(ANIMATION_PAUSE_SEC)
-
-            print(f"New optimal path found! Duration of driving: {t_min:.3f} seconds")
+    # find optimal path using a genetic algorithm
+    opt_path = find_optimal_path_ga(
+        track,
+        gokart,
+        population_size=GA_POPULATION_SIZE,
+        num_generations=GA_NUM_GENERATIONS,
+        progress_callback=on_new_best,
+    )
 
     animation = GokartDriveAnimation(track_image_arr, opt_path, gokart)
     animation.show()
