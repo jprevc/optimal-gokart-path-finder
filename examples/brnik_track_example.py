@@ -86,7 +86,7 @@ def main() -> None:
         )
 
     # find optimal path using a genetic algorithm
-    finder = GeneticAlgorithmPathFinder(population_size=50, num_generations=50)
+    finder = GeneticAlgorithmPathFinder(population_size=25, num_generations=200, mutation_rate=0.1, tournament_size=10, elite_fraction=0.1, n_jobs=8)
     opt_path = finder.find_optimal_path(track, gokart, progress_callback=on_new_best)
 
     animation = GokartDriveAnimation(track_image_arr, opt_path, gokart)

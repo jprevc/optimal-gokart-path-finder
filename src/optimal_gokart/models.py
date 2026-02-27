@@ -134,14 +134,19 @@ class Path:
 
     def _set_spline_interpolation_rep(self):
         pts_scaled = self.pts / self.pix_to_m_ratio
-        # Remove consecutive duplicate points to avoid zero chord-lengths that
-        # cause splprep to fail with "Invalid inputs".
+        # Remove consecutive duplicate points (including the wraparound between
+        # last and first point) to avoid zero chord-lengths that cause splprep
+        # to fail with "Invalid inputs".
         dists = np.linalg.norm(np.diff(pts_scaled, axis=0), axis=1)
         keep = np.concatenate(([True], dists > 0))
         pts_scaled = pts_scaled[keep]
+        # Also drop the last point if it coincides with the first (periodic).
+        if np.linalg.norm(pts_scaled[-1] - pts_scaled[0]) == 0:
+            pts_scaled = pts_scaled[:-1]
         self._spline_interpolation_rep = interpolate.splprep(
             [pts_scaled[:, 0], pts_scaled[:, 1]],
             s=self.smooth_coef,
+            per=True,
         )[0]
 
     def get_interpolated_path(self, metric=True):
@@ -257,13 +262,17 @@ class Path:
         p_norm_lst = []
         len_path = self.path_length
 
-        # get interpolation function for maximum speed
-        v_max_interp = interpolate.interp1d(self._u, self.get_v_max(gokart))
+        # Pre-compute the v_max array; because self._u is a uniform linspace(0,1)
+        # grid we can convert p_norm → array index directly, avoiding the overhead
+        # of calling a scipy interp1d object on every simulation step.
+        v_max_arr = self.get_v_max(gokart)
+        n_pts = len(v_max_arr)
+        n_pts_m1 = n_pts - 1
 
         v = v0
-        p_norm = 0
+        p_norm = 0.0
         loop_cnt = 0
-        total_time = 0
+        total_time = 0.0
         time_vec = []
         while True:
 
@@ -275,10 +284,18 @@ class Path:
             v = v + dt * gokart.get_acceleration(v)
 
             # check if calculated speed is more than theoretically fastest for
-            # current path radius
-            v_max_interp_eval = float(v_max_interp(p_norm))
-            if v > v_max_interp_eval:
-                v = v_max_interp_eval
+            # current path radius — linear interpolation on the uniform grid
+            idx_f = p_norm * n_pts_m1
+            idx_lo = int(idx_f)
+            if idx_lo >= n_pts_m1:
+                v_max_at_p = float(v_max_arr[n_pts_m1])
+            else:
+                frac = idx_f - idx_lo
+                v_max_at_p = float(
+                    v_max_arr[idx_lo] + frac * (v_max_arr[idx_lo + 1] - v_max_arr[idx_lo])
+                )
+            if v > v_max_at_p:
+                v = v_max_at_p
 
             # get normalised position for next iteration
             p_norm = p_norm + dt * v / len_path
