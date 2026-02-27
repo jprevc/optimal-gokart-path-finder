@@ -1,4 +1,5 @@
 from .algorithms import GeneticAlgorithmPathFinder, MonteCarloPathFinder, PathFinder
+from .cli import main
 from .models import Gokart, Path, Track
 from .visualization import GokartDriveAnimation
 
@@ -10,4 +11,5 @@ __all__ = [
     "PathFinder",
     "GeneticAlgorithmPathFinder",
     "MonteCarloPathFinder",
+    "main",
 ]

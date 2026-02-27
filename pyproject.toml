@@ -12,6 +12,9 @@ dependencies = [
     "imageio>=2.31",
 ]
 
+[project.scripts]
+optimal-gokart = "optimal_gokart.cli:main"
+
 [dependency-groups]
 dev = [
     "ruff",
