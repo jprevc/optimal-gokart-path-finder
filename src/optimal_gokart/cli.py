@@ -277,8 +277,14 @@ def _build_finder(args: argparse.Namespace) -> PathFinder:
 
 def _run(args: argparse.Namespace) -> None:
     track_image_path: Path = args.track_image or _bundled("brnik-track-snip.PNG")
-    points_file: Path = args.points_file or _bundled("points.npy")
-    save_points: Path | None = args.save_points
+    # Explicit --points-file takes precedence; otherwise use the bundled default.
+    # When doing interactive selection and no explicit path is given, save to the
+    # current working directory instead of the (possibly read-only) package data dir.
+    bundled_points = _bundled("points.npy")
+    points_file: Path = args.points_file or bundled_points
+    save_points: Path | None = args.save_points or (
+        Path("points.npy") if points_file == bundled_points else None
+    )
 
     track_image_arr = _load_track_image(track_image_path)
 

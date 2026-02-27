@@ -1,6 +1,6 @@
 # Optimal Gokart Path Finder
 
-A Monte Carlo–based tool that finds a near-optimal racing line for a go-kart on a user-defined track. The track is represented by border points; paths are interpolated with splines and evaluated using a simple physics model (acceleration, drag, and lateral grip).
+A tool that finds a near-optimal racing line for a go-kart on a user-defined track. The track is represented by border points; paths are interpolated with splines and evaluated using a simple physics model (acceleration, drag, and lateral grip). Two search algorithms are supported: a **Genetic Algorithm** and **Monte Carlo** random sampling.
 
 ---
 
@@ -10,7 +10,7 @@ The program:
 
 1. Lets you define a track by clicking border points on a track image (or by loading saved points).
 2. Discretizes the track into segments and samples waypoints along each segment.
-3. Searches over path combinations via **random sampling (Monte Carlo)**.
+3. Searches over path combinations via a **Genetic Algorithm** or **Monte Carlo** random sampling.
 4. For each candidate path: builds a **smooth spline**, computes curvature and maximum cornering speed, then **simulates** lap time with a go-kart model.
 5. Keeps the path with the **shortest simulated lap time** and optionally animates the kart driving along it.
 
@@ -58,24 +58,24 @@ Run `optimal-gokart --help` for all available options.
 
 ### Interactive track definition
 
-- If **`points.npy`** does not exist, the script opens the track image and asks you to **click points** along the track borders.
-  - Click in order along one border, then the other, so that consecutive pairs of points define line segments across the track.
-  - When finished, **click the middle mouse button (wheel)** to stop input. The points are saved to `points.npy`.
-- The **first two clicked points** are used as a scale reference: they should correspond to a known distance on the track (e.g. 20 m). The script uses this to set the pixel-to-meter ratio.
-- On the next run, if `points.npy` exists, the script loads it and skips the clicking step.
+If no `--points-file` is given and the bundled default doesn't exist, the CLI opens the track image and asks you to **click border points**:
 
-### What the script does
+- Click in order along one border, then the other, so that consecutive pairs define line segments across the track.
+- When finished, **click the middle mouse button (wheel)** to stop. Points are saved to `points.npy` in the current directory.
+- The **first two clicked points** are used as a scale reference; they should correspond to a known distance on the track (e.g. 20 m) to set the pixel-to-metre ratio.
 
-1. Loads or collects track border points and builds a `Track`.
-2. Runs a **Monte Carlo search**: repeatedly samples random paths on the track, simulates lap time for each, and keeps the path with the **minimum lap time**.
+### What the CLI does
+
+1. Loads the track image and border points (bundled defaults or user-supplied).
+2. Runs the chosen algorithm (`ga` or `montecarlo`) to find the path with the **shortest simulated lap time**.
 3. Redraws the plot whenever a better path is found.
-4. At the end, plays an **animation** of the go-kart driving the best path.
+4. Plays an **animation** of the go-kart driving the best path.
 
 ---
 
 ## Gokart parameters
 
-You can tune the go-kart by passing these arguments to `Gokart(mass, f_grip, f_motor, k_drag)`:
+You can tune the go-kart physics via CLI flags (`--gokart-mass`, `--gokart-f-grip`, `--gokart-f-motor`, `--gokart-k-drag`):
 
 | Parameter   | Meaning                         | Unit   | Example / note                          |
 |------------|----------------------------------|--------|----------------------------------------|
@@ -93,8 +93,10 @@ Higher `f_grip` allows higher cornering speed; higher `f_motor` and lower `k_dra
 1. **Track representation**  
    Border points define line segments across the track. Each segment is discretized into `points_on_line` waypoints. A **path** is one waypoint chosen on each segment, in order.
 
-2. **Monte Carlo path search**  
-   Instead of enumerating all paths (exponential in the number of segments), the code **samples random paths** by picking a random waypoint on each segment. It runs a fixed number of iterations (e.g. 100) and keeps the path with the **shortest simulated lap time**.
+2. **Path search**  
+   Two algorithms are available:
+   - **Genetic Algorithm (`ga`):** Evolves a population of paths over generations using selection, crossover, and mutation. Generally finds better paths given the same compute budget.
+   - **Monte Carlo (`montecarlo`):** Samples random paths and keeps the one with the shortest lap time. Simpler but effective for a quick search.
 
 3. **Spline interpolation**  
    The chosen waypoints are interpolated with a **smooth spline** (e.g. `scipy.interpolate.splprep` / `splev`). The spline gives:
@@ -126,8 +128,8 @@ Higher `f_grip` allows higher cornering speed; higher `f_motor` and lower `k_dra
 └───────────────────────────────┬─────────────────────────────────┘
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Monte Carlo loop (e.g. N = 100 iterations)                     │
-│    ├─ Sample random path (one waypoint per segment)             │
+│  Search loop (GA generations or Monte Carlo iterations)         │
+│    ├─ Generate candidate path(s)                                │
 │    ├─ Path → spline interpolation → curvature → v_max(s)        │
 │    ├─ Simulate lap: integrate speed with motor/drag + grip cap  │
 │    └─ If lap time < best so far → save path, redraw             │

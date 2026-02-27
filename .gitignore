@@ -3,4 +3,3 @@ __pycache__/
 .venv/
 src/optimal_gokart_path_finder.egg-info/
 
-points.npy
