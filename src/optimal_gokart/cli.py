@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import argparse
 import importlib.resources
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import imageio
 import matplotlib.pyplot as plt
@@ -266,9 +266,9 @@ def _prepare_track_and_gokart(
     gokart_f_grip: float,
     gokart_f_motor: float,
     gokart_k_drag: float,
-) -> tuple[Track, Gokart, float]:
+) -> tuple[Track, Gokart]:
     fig_pts = plt.figure()
-    axes_pts = fig_pts.add_subplot(111)
+    _ = fig_pts.add_subplot(111)
 
     # first two points define the reference distance (scale)
     unit_pts = points[:2, :]
