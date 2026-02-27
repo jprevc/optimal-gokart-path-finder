@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies (use uv.lock when present)
+        run: uv sync
+
+      - name: Run Ruff
+        run: uv run ruff .
+
+      - name: Run Black (check only)
+        run: uv run black --check .
+
+      - name: Run Mypy
+        run: uv run mypy .
+
+      - name: Run tests
+        run: uv run pytest
+
