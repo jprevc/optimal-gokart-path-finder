@@ -1,7 +1,8 @@
 # Optimal Gokart Path Finder
 
+[![CI](https://github.com/jprevc/optimal-gokart-path-finder/actions/workflows/ci.yml/badge.svg)](https://github.com/jprevc/optimal-gokart-path-finder/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
 [![GitHub stars](https://img.shields.io/github/stars/jprevc/optimal-gokart-path-finder?style=social)](https://github.com/jprevc/optimal-gokart-path-finder/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/jprevc/optimal-gokart-path-finder)](https://github.com/jprevc/optimal-gokart-path-finder/issues)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jprevc/optimal-gokart-path-finder)](https://github.com/jprevc/optimal-gokart-path-finder/commits/master)
