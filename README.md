@@ -7,7 +7,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/jprevc/optimal-gokart-path-finder)](https://github.com/jprevc/optimal-gokart-path-finder/issues)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jprevc/optimal-gokart-path-finder)](https://github.com/jprevc/optimal-gokart-path-finder/commits/master)
 
-A tool that finds a near-optimal racing line for a go-kart on a user-defined track. The track is represented by border points; paths are interpolated with splines and evaluated using a simple physics model (acceleration, drag, and lateral grip). Two search algorithms are supported: a **Genetic Algorithm** and **Monte Carlo** random sampling.
+A tool that finds an optimal racing line for a go-kart on a user-defined track. The track is represented by border points; paths are interpolated with splines and evaluated using a simple physics model (acceleration, drag, and lateral grip). Two search algorithms are supported: a **Genetic Algorithm** and **Monte Carlo** random sampling.
 
 ---
 
@@ -79,9 +79,9 @@ Run `optimal-gokart --help` for all available options.
 
 If no `--points-file` is given and the bundled default doesn't exist, the CLI opens the track image and asks you to **click border points**:
 
+- The **first two clicked points** are used as a scale reference; they should correspond to a known distance on the track (e.g. 20 m) to set the pixel-to-metre ratio.
 - Click in order along one border, then the other, so that consecutive pairs define line segments across the track.
 - When finished, **click the middle mouse button (wheel)** to stop. Points are saved to `points.npy` in the current directory.
-- The **first two clicked points** are used as a scale reference; they should correspond to a known distance on the track (e.g. 20 m) to set the pixel-to-metre ratio.
 
 ### What the CLI does
 
